@@ -1,0 +1,39 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_modules/
+
+# Local configuration / Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Databases & SQLite WAL states
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/
+
+# SSH credentials & secure host profiles
+keys/
+keys/andy_ed25519
+keys/andy_ed25519.pub
+keys/config
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Diagnostic / Temp files
+.pnpm-store/
+.pnpm-debug.log
+.gemini/
+*.tmp
+.DS_Store

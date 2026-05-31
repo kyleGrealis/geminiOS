@@ -1,0 +1,33 @@
+[Unit]
+Description=Andy (geminiOS) Discord Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/kyle/geminiOS
+ExecStart=/usr/bin/node --experimental-strip-types src/index.ts
+Restart=on-failure
+RestartSec=10
+Environment=NODE_ENV=production
+EnvironmentFile=/home/kyle/geminiOS/.env
+
+# Sandbox Rails
+ProtectHome=tmpfs
+BindPaths=/home/kyle/geminiOS
+BindPaths=/home/kyle/.gemini/state
+BindPaths=/home/kyle/.gemini/tmp/kyle
+BindReadOnlyPaths=/home/kyle/Documents/obsidian
+BindPaths=/home/kyle/Documents/obsidian/AndyMemory
+BindReadOnlyPaths=/home/kyle/.config/gmail-mcp
+BindReadOnlyPaths=/home/kyle/.config/google-calendar-mcp
+BindReadOnlyPaths=/home/kyle/.config/google-drive-mcp
+ProtectSystem=strict
+PrivateTmp=yes
+NoNewPrivileges=true
+LimitNOFILE=4096
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
