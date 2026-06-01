@@ -8,4 +8,4 @@ Each value must be a string. Ensure code blocks inside the "code" field are wrap
 Content Guidelines:
 1. "prose": **What you'll learn** (one sentence), followed by **Concept** (1-2 paragraphs bridging TypeScript and R). No conversational fluff. Include emojis for friendly pacing.
 2. "code": Code examples with ```ts or ```R blocks.
-3. "followup": **Try it** instruction, **Connection to GeminiOS**, and the URL: https://www.typescriptlang.org/play
+3. "followup": **Try it** instruction, **Connection to geminiOS**, and the URL: https://www.typescriptlang.org/play

@@ -79,7 +79,7 @@ export function syncDefaultTasks() {
     {
       id: 'core_morning_weather',
       kind: 'recurring',
-      cron: '30 6 * * *', // 6:30 AM daily
+      cron: '0 6 * * *', // 6:00 AM daily
       blueprint: 'blueprints/weather-morning.md',
       channel_id: '1494156244439666829' // #weather
     },
@@ -93,8 +93,15 @@ export function syncDefaultTasks() {
     {
       id: 'core_typescript_lesson',
       kind: 'recurring',
-      cron: '0 8 * * 1-5', // 8:00 AM Mon-Fri
+      cron: '0 7 * * 1-5', // 7:00 AM Mon-Fri
       blueprint: 'blueprints/ts-lesson.md',
+      channel_id: '1494156616071643386' // #typescript-learning
+    },
+    {
+      id: 'core_typescript_recap',
+      kind: 'recurring',
+      cron: '0 7 * * 6', // 7:00 AM Saturday
+      blueprint: 'blueprints/ts-recap.md',
       channel_id: '1494156616071643386' // #typescript-learning
     },
     {
@@ -198,6 +205,27 @@ async function runSweep(discordClient: any) {
         .replace('{{topic}}', topic);
     }
 
+    if (job.id === 'core_typescript_recap') {
+      const progress = loadTSProgress();
+      const currentLesson = progress.currentLesson;
+      const startLesson = Math.max(1, currentLesson - 5);
+      const endLesson = currentLesson - 1;
+
+      if (endLesson < startLesson) {
+        console.log('[Scheduler] No lessons completed yet. Skipping Saturday recap.');
+        rescheduleJob(job);
+        continue;
+      }
+
+      const topicsList: string[] = [];
+      for (let i = startLesson; i <= endLesson; i++) {
+        topicsList.push(`- Lesson ${i}: ${CURRICULUM[i - 1]}`);
+      }
+
+      blueprintContent = blueprintContent
+        .replace('{{topicsList}}', topicsList.join('\n'));
+    }
+
     // 4. Run the turn through our agent
     try {
       const turnResult = await runAgentTurn('weather', blueprintContent); // Runs in background
@@ -205,7 +233,7 @@ async function runSweep(discordClient: any) {
       // Resolve formatting for TS daily lesson JSON blocks
       let messagesToSend: string[] = [];
 
-      if (job.id === 'core_typescript_lesson') {
+      if (job.id === 'core_typescript_lesson' || job.id === 'core_typescript_recap') {
         try {
           let cleanJson = turnResult.text.trim();
           if (cleanJson.startsWith('```json')) {
@@ -223,7 +251,7 @@ async function runSweep(discordClient: any) {
           if (parsed.code) messagesToSend.push(parsed.code);
           if (parsed.followup) messagesToSend.push(parsed.followup);
         } catch (parseErr) {
-          console.warn('[Scheduler] Failed to parse TS lesson JSON, falling back to raw text:', parseErr);
+          console.warn(`[Scheduler] Failed to parse ${job.id} JSON, falling back to raw text:`, parseErr);
         }
       }
 
@@ -289,6 +317,35 @@ async function runSweep(discordClient: any) {
         SET tries = tries + 1, last_error = ?, status = CASE WHEN tries >= 3 THEN 'errored' ELSE 'pending' END, process_after = ?
         WHERE id = ?
       `).run(err.message, new Date(Date.now() + 300000).toISOString(), job.id); // Retry in 5 minutes
+
+      try {
+        const errChannel = await discordClient.channels.fetch(job.channel_id);
+        if (errChannel && errChannel.isTextBased()) {
+          await errChannel.send(`⚠️ **[Scheduled Task Alert]** Failed to execute task \`${job.id}\`: ${err.message}`);
+        }
+
+        // Post to #logs-and-issues channel
+        let logsChannel: any = null;
+        logsChannel = discordClient.channels.cache.find(
+          (c: any) => c.name === 'logs-and-issues' || c.name === 'logs' || c.name === 'issues'
+        );
+        if (!logsChannel) {
+          for (const guild of discordClient.guilds.cache.values()) {
+            const channels = await guild.channels.fetch();
+            const found = channels.find((c: any) => c.name === 'logs-and-issues' || c.name === 'logs' || c.name === 'issues');
+            if (found) {
+              logsChannel = found;
+              break;
+            }
+          }
+        }
+
+        if (logsChannel && logsChannel.isTextBased() && logsChannel.id !== job.channel_id) {
+          await logsChannel.send(`⚠️ **[Scheduler Error]** Task \`${job.id}\` failed in <#${job.channel_id}>: ${err.message}`);
+        }
+      } catch (postErr: any) {
+        console.error('[Scheduler] Failed to send error notification to Discord:', postErr.message);
+      }
     }
   }
 }

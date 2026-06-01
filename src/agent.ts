@@ -151,6 +151,11 @@ export async function runAgentTurn(
       functionCalls = response.functionCalls;
     }
 
+    if (turnCount >= maxTurns && functionCalls && functionCalls.length > 0) {
+      const lastTool = loggedToolCalls[loggedToolCalls.length - 1]?.name || 'none';
+      throw new Error(`Max tool execution turns (${maxTurns}) reached without a final response. Last executed tool: ${lastTool}`);
+    }
+
     responseText = response.text || '';
   } catch (error: any) {
     console.error('[Agent] GenerateContent Turn Error:', error);

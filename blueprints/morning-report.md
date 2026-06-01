@@ -29,3 +29,4 @@ Mandates:
 - No trailing "how can I help" or "what would you like to do" offers.
 - No emdashes anywhere.
 - If a tool call fails, note what you couldn't fetch and move on. Don't skip the whole report.
+- For project nudges and infrastructure checks, only query your knowledge base using `recall_memory`. Do not execute filesystem search commands (like `find` or `grep`) to locate files.
