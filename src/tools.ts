@@ -90,12 +90,13 @@ export const toolDeclarations = [
   },
   {
     name: 'save_memory',
-    description: 'Persist a fact to Obsidian long-term memory. Use a short kebab-case topic slug (e.g. favorite-color) to overwrite in place.',
+    description: 'Persist or append a fact to long-term memory. Overwrites or appends to a kebab-case topic file (e.g. kyle-profile).',
     parameters: {
       type: 'OBJECT',
       properties: {
-        topic: { type: 'STRING', description: 'Kebab-case slug. Reuse to overwrite previous details.' },
-        fact: { type: 'STRING', description: 'The fact to remember (max 500 characters).' }
+        topic: { type: 'STRING', description: 'Kebab-case slug (e.g. kyle-profile).' },
+        fact: { type: 'STRING', description: 'The fact/details to save (max 1000 characters).' },
+        mode: { type: 'STRING', description: 'Whether to "append" (default) or "overwrite" the existing file.', enum: ['append', 'overwrite'] }
       },
       required: ['topic', 'fact']
     }
@@ -364,7 +365,7 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
     }
   },
 
-  save_memory: async ({ topic, fact }) => {
+  save_memory: async ({ topic, fact, mode = 'append' }) => {
     try {
       if (!fs.existsSync(MEMORY_DIR)) {
         fs.mkdirSync(MEMORY_DIR, { recursive: true });
@@ -373,16 +374,31 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
       const slug = topic.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
       const filePath = path.join(MEMORY_DIR, `${slug}.md`);
 
+      let finalFact = fact.trim();
+
+      if (mode === 'append' && fs.existsSync(filePath)) {
+        const existingContent = fs.readFileSync(filePath, 'utf8');
+        const match = existingContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+        if (match) {
+          const body = match[2].trim();
+          if (body.toLowerCase().includes(finalFact.toLowerCase())) {
+            return `Fact is already recorded in memory: ${slug}.md`;
+          }
+          // Append as a new list item/paragraph
+          finalFact = `${body}\n\n- ${finalFact}`;
+        }
+      }
+
       const frontmatter = `---
 title: ${slug}
 updated: ${new Date().toISOString()}
 ---
-${fact}
+${finalFact.startsWith('- ') || finalFact.includes('\n') ? finalFact : `- ${finalFact}`}
 `;
 
       fs.writeFileSync(filePath, frontmatter, 'utf8');
-      console.log(`[Tool] Saved memory topic: ${slug}`);
-      return `Fact successfully saved to memory shard: ${slug}.md`;
+      console.log(`[Tool] Saved memory topic: ${slug} (mode: ${mode})`);
+      return `Fact successfully saved to memory: ${slug}.md (${mode === 'append' ? 'appended' : 'overwritten'})`;
     } catch (error: any) {
       return `Error saving memory: ${error.message}`;
     }
