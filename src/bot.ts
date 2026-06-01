@@ -1,5 +1,7 @@
 import { Client, GatewayIntentBits, AttachmentBuilder } from 'discord.js';
 import { runAgentTurn } from './agent.ts';
+import * as fs from 'fs';
+import * as path from 'path';
 
 function splitForLimit(text: string, limit: number): string[] {
   if (!text) return [];
@@ -58,10 +60,61 @@ client.on('messageCreate', async (message) => {
   const botMentionRegex = new RegExp(`<@!?${botUser.id}>`, 'g');
   promptText = promptText.replace(botMentionRegex, '').trim();
 
-  // If message is just a bare mention, ignore
-  if (!promptText && isMentioned) {
+  // If message is just a bare mention and no attachments, reply and return
+  if (!promptText && message.attachments.size === 0 && isMentioned) {
     message.reply('Yes? How can I help you?');
     return;
+  }
+
+  // Process attachments (PDFs, images, etc.)
+  const attachmentParts: any[] = [];
+  if (message.attachments.size > 0) {
+    const attachmentsDir = path.resolve(process.cwd(), 'attachments');
+    if (!fs.existsSync(attachmentsDir)) {
+      fs.mkdirSync(attachmentsDir, { recursive: true });
+    }
+
+    for (const [id, attachment] of message.attachments) {
+      try {
+        console.log(`[Bot] Processing attachment: name=${attachment.name}, size=${attachment.size}, contentType=${attachment.contentType}`);
+        
+        // Download attachment bytes
+        const res = await fetch(attachment.url);
+        if (!res.ok) throw new Error(`Failed to download attachment: ${res.statusText}`);
+        const arrayBuf = await res.arrayBuffer();
+        const buffer = Buffer.from(arrayBuf);
+
+        // Save local copy
+        const safeName = attachment.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const localPath = path.join(attachmentsDir, safeName);
+        fs.writeFileSync(localPath, buffer);
+        const relPath = path.join('attachments', safeName);
+
+        // Format prompt reference based on file type
+        const isPdf = attachment.contentType?.toLowerCase() === 'application/pdf' || attachment.name.toLowerCase().endsWith('.pdf');
+        const isImage = attachment.contentType?.startsWith('image/') || /\.(png|jpe?g|webp|gif)$/i.test(attachment.name);
+
+        if (isPdf) {
+          promptText += `\n\n[PDF: ${relPath}]`;
+        } else if (isImage) {
+          promptText += `\n\n[image: ${relPath}]`;
+        } else {
+          promptText += `\n\n[Attached: ${relPath}]`;
+        }
+
+        // Add to inlineData parts for Gemini
+        const mimeType = attachment.contentType || 'application/octet-stream';
+        attachmentParts.push({
+          inlineData: {
+            mimeType,
+            data: buffer.toString('base64')
+          }
+        });
+      } catch (err: any) {
+        console.error(`[Bot] Failed to process attachment ${attachment.name}:`, err);
+      }
+    }
+    promptText = promptText.trim();
   }
 
   console.log(`[Bot] Received message in channel #${channelName} from ${message.author.username}: "${promptText}"`);
@@ -99,7 +152,7 @@ client.on('messageCreate', async (message) => {
 
   // 4. Run the turn through Gemini agent
   try {
-    const turnResult = await runAgentTurn(channelName, promptText, history);
+    const turnResult = await runAgentTurn(channelName, promptText, history, attachmentParts);
 
     // Stop typing indicator
     clearInterval(typingInterval);

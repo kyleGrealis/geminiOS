@@ -29,6 +29,7 @@ bash:
     - "free -m"
     - "uptime"
     - "ssh"
+    - "pdf-reader"
   deny:
     - "rm"
     - "mv"

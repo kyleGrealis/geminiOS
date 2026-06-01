@@ -28,7 +28,8 @@ export interface AgentContext {
 export async function runAgentTurn(
   channelName: string,
   promptText: string,
-  history: any[] = []
+  history: any[] = [],
+  attachments: any[] = []
 ): Promise<{ text: string; imageAttachment?: AgentContext['imageAttachment'] }> {
   const client = getGenAIClient();
   const perms = getPermissions();
@@ -63,12 +64,15 @@ export async function runAgentTurn(
   }
 
   // 2. Build the messages history for Gemini
-  // Gemini GenAI API expects parts structure
   const contents: any[] = [];
   for (const turn of history) {
     contents.push(turn);
   }
-  contents.push({ role: 'user', parts: [{ text: promptText }] });
+  const userParts: any[] = [{ text: promptText }];
+  for (const att of attachments) {
+    userParts.push(att);
+  }
+  contents.push({ role: 'user', parts: userParts });
 
   const context: AgentContext = { geminiClient: client };
   let responseText = '';

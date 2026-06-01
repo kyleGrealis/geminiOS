@@ -1,0 +1,187 @@
+#!/usr/bin/env node
+import fs from 'fs';
+import path from 'path';
+import pdf from 'pdf-parse';
+
+// Help message
+const USAGE = `pdf-reader — Extract text and metadata from PDF files (pure JS)
+
+Usage:
+  pdf-reader extract <file> [--layout] [--pages N-M]
+  pdf-reader fetch <url> [filename]
+  pdf-reader info <file>
+  pdf-reader list
+  pdf-reader help
+`;
+
+function listPDFs(dir, fileList = []) {
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    if (stat.isDirectory()) {
+      if (file !== 'node_modules' && !file.startsWith('.')) {
+        listPDFs(filePath, fileList);
+      }
+    } else if (file.toLowerCase().endsWith('.pdf')) {
+      fileList.push(path.relative(process.cwd(), filePath));
+    }
+  }
+  return fileList;
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const cmd = args[0] || 'help';
+
+  if (cmd === 'help' || cmd === '--help' || cmd === '-h') {
+    console.log(USAGE);
+    process.exit(0);
+  }
+
+  if (cmd === 'list') {
+    try {
+      const pdfs = listPDFs(process.cwd());
+      if (pdfs.length === 0) {
+        console.log('No PDF files found in current directory tree.');
+        process.exit(0);
+      }
+      for (const file of pdfs) {
+        const stat = fs.statSync(file);
+        const sizeKB = (stat.size / 1024).toFixed(1);
+        try {
+          const buf = fs.readFileSync(file);
+          const data = await pdf(buf);
+          console.log(`${file.padEnd(50)} ${data.numpages} pages  ${sizeKB}KB`);
+        } catch {
+          console.log(`${file.padEnd(50)} ? pages  ${sizeKB}KB`);
+        }
+      }
+    } catch (err) {
+      console.error('Error listing PDFs:', err.message);
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  if (cmd === 'info') {
+    const file = args[1];
+    if (!file) {
+      console.error('Error: No file specified.\nUsage: pdf-reader info <file>');
+      process.exit(1);
+    }
+    if (!fs.existsSync(file)) {
+      console.error(`Error: File not found: ${file}`);
+      process.exit(1);
+    }
+    try {
+      const buf = fs.readFileSync(file);
+      const data = await pdf(buf);
+      const stat = fs.statSync(file);
+      console.log('Pages:         ', data.numpages);
+      if (data.info) {
+        for (const [k, v] of Object.entries(data.info)) {
+          console.log(`${k.padEnd(14)}`, v);
+        }
+      }
+      console.log('File size:     ', (stat.size / 1024).toFixed(1) + ' KB');
+    } catch (err) {
+      console.error('Error reading PDF metadata:', err.message);
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  if (cmd === 'fetch') {
+    const url = args[1];
+    const filename = args[2];
+    if (!url) {
+      console.error('Error: No URL specified.\nUsage: pdf-reader fetch <url> [filename]');
+      process.exit(1);
+    }
+    try {
+      console.warn(`Downloading: ${url}`);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP error ${res.status}: ${res.statusText}`);
+      const arrayBuf = await res.arrayBuffer();
+      const buf = Buffer.from(arrayBuf);
+      if (filename) {
+        fs.writeFileSync(filename, buf);
+        console.warn(`Saved to: ${filename}`);
+      }
+      const data = await pdf(buf);
+      console.log(data.text);
+    } catch (err) {
+      console.error('Error fetching PDF:', err.message);
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  if (cmd === 'extract') {
+    const file = args[1];
+    if (!file) {
+      console.error('Error: No file specified.\nUsage: pdf-reader extract <file> [--layout] [--pages N-M]');
+      process.exit(1);
+    }
+    if (!fs.existsSync(file)) {
+      console.error(`Error: File not found: ${file}`);
+      process.exit(1);
+    }
+
+    let pagesArg = '';
+    const pagesIdx = args.indexOf('--pages');
+    if (pagesIdx !== -1 && args[pagesIdx + 1]) {
+      pagesArg = args[pagesIdx + 1];
+    }
+
+    try {
+      const buf = fs.readFileSync(file);
+      
+      if (pagesArg) {
+        const parts = pagesArg.split('-');
+        const startPage = parseInt(parts[0] || '1', 10);
+        const endPage = parseInt(parts[1] || parts[0] || '9999', 10);
+
+        const pageTexts = [];
+        
+        await pdf(buf, {
+          pagerender: (pageData) => {
+            return pageData.getTextContent({
+              normalizeWhitespace: true,
+              disableCombineTextItems: false
+            }).then((textContent) => {
+              let lastY;
+              let text = '';
+              for (const item of textContent.items) {
+                if (lastY === item.transform[5] || lastY === undefined) {
+                  text += item.str;
+                } else {
+                  text += '\n' + item.str;
+                }
+                lastY = item.transform[5];
+              }
+              pageTexts.push(text);
+              return text;
+            });
+          }
+        });
+
+        const selectedTexts = pageTexts.slice(startPage - 1, endPage);
+        console.log(selectedTexts.join('\n\n'));
+      } else {
+        const data = await pdf(buf);
+        console.log(data.text);
+      }
+    } catch (err) {
+      console.error('Error extracting PDF text:', err.message);
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  console.error(`Error: Unknown command: ${cmd}\nRun 'pdf-reader help' for usage.`);
+  process.exit(1);
+}
+
+main();
