@@ -210,6 +210,18 @@ export const toolDeclarations = [
       },
       required: ['filename']
     }
+  },
+  {
+    name: 'send_channel_message',
+    description: 'Send a text message to a specific Discord channel in the guild (e.g. logs-and-issues, main, weather).',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        channelName: { type: 'STRING', description: 'The name of the channel (without leading #), e.g. "logs-and-issues".' },
+        messageText: { type: 'STRING', description: 'The text message content to send.' }
+      },
+      required: ['channelName', 'messageText']
+    }
   }
 ];
 
@@ -604,6 +616,20 @@ ${fact}
       return `File "${safeFilename}" was successfully read and attached to the response.`;
     } catch (error: any) {
       return `Error sending local attachment: ${error.message}`;
+    }
+  },
+
+  send_channel_message: async ({ channelName, messageText }) => {
+    try {
+      const { client } = await import('./bot.ts');
+      const channel = client.channels.cache.find((c: any) => c.name === channelName);
+      if (!channel) {
+        return `Error: Channel "${channelName}" not found in cache.`;
+      }
+      await channel.send(messageText);
+      return `Message successfully sent to channel #${channelName}.`;
+    } catch (error: any) {
+      return `Error sending message: ${error.message}`;
     }
   }
 };
