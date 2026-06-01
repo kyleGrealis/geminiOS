@@ -199,6 +199,17 @@ export const toolDeclarations = [
       },
       required: ['task_name', 'config']
     }
+  },
+  {
+    name: 'send_local_attachment',
+    description: 'Send/upload an existing file from the local attachments directory back to the Discord channel.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        filename: { type: 'STRING', description: 'The name of the file (e.g., "image.png" or "data.csv") within the attachments folder.' }
+      },
+      required: ['filename']
+    }
   }
 ];
 
@@ -512,6 +523,41 @@ ${fact}
       return `Task configuration for "${task_name}" updated successfully.`;
     } catch (error: any) {
       return `Error updating task config: ${error.message}`;
+    }
+  },
+
+  send_local_attachment: async ({ filename }, context) => {
+    try {
+      if (!context) {
+        throw new Error('Execution context is not initialized.');
+      }
+
+      const attachmentsDir = path.resolve(process.cwd(), 'attachments');
+
+      // Restrict strictly to filename to prevent directory traversal
+      const safeFilename = path.basename(filename);
+      const filePath = path.resolve(attachmentsDir, safeFilename);
+
+      if (!filePath.startsWith(attachmentsDir)) {
+        throw new Error('Access denied: File path escapes the attachments directory.');
+      }
+
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`File not found: "${safeFilename}" does not exist in the attachments directory.`);
+      }
+
+      const buffer = fs.readFileSync(filePath);
+
+      context.imageAttachment = {
+        buffer,
+        name: safeFilename,
+        prompt: `Uploaded attachment: ${safeFilename}`
+      };
+
+      console.log(`[Tool] Attached file from attachments folder: ${safeFilename}`);
+      return `File "${safeFilename}" was successfully read and attached to the response.`;
+    } catch (error: any) {
+      return `Error sending local attachment: ${error.message}`;
     }
   }
 };
