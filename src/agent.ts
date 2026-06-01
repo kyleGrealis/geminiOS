@@ -92,7 +92,7 @@ export async function runAgentTurn(
     // 3. Execution loop for handling tool calls
     let functionCalls = response.functionCalls;
     let turnCount = 0;
-    const maxTurns = 8; // Safety ceiling to prevent loop spirals
+    const maxTurns = 15; // Safety ceiling to prevent loop spirals
 
     while (functionCalls && functionCalls.length > 0 && turnCount < maxTurns) {
       turnCount++;
@@ -104,7 +104,12 @@ export async function runAgentTurn(
         let result: any;
         let status: 'success' | 'error' = 'success';
 
-        if (handler) {
+        // Check for search loop spirals (cap web_search & recall_memory at 3 calls per turn)
+        const previousCallsOfThisTool = loggedToolCalls.filter(l => l.name === call.name).length;
+        if ((call.name === 'web_search' || call.name === 'recall_memory') && previousCallsOfThisTool >= 3) {
+          result = `Limit reached for tool "${call.name}". Do not call this tool again in this turn. Summarize what you found so far (or state that the info is missing) and ask the user for clarification.`;
+          status = 'success';
+        } else if (handler) {
           try {
             result = await handler(call.args, context);
             if (result && typeof result === 'object' && result.error) {
