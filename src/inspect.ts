@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import * as path from 'path';
 
-const DB_PATH = path.resolve(import.meta.dirname, '../data/andy.db');
+const DB_PATH = path.resolve(import.meta.dirname, '../data/qwerty.db');
 
 function inspect(lastCount = 5) {
   const db = new Database(DB_PATH, { readonly: true });

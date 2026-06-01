@@ -19,7 +19,7 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-const PERSONA_PATH = path.resolve(import.meta.dirname, '../config/andy-persona.md');
+const PERSONA_PATH = path.resolve(import.meta.dirname, '../config/qwerty-persona.md');
 const PERMISSIONS_PATH = path.resolve(import.meta.dirname, '../config/permissions.yaml');
 
 export interface PermissionsConfig {
@@ -73,7 +73,7 @@ export function getSystemInstructions(): string {
       return fs.readFileSync(PERSONA_PATH, 'utf8');
     }
   } catch (error) {
-    console.error('[Config] Failed to read andy-persona.md:', error);
+    console.error('[Config] Failed to read qwerty-persona.md:', error);
   }
-  return 'You are Andy, Kyle\'s personal assistant and sysadmin.';
+  return 'You are Qwerty, Kyle\'s personal assistant and sysadmin.';
 }

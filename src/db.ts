@@ -8,7 +8,7 @@ if (!fs.existsSync(DB_DIR)) {
   fs.mkdirSync(DB_DIR, { recursive: true });
 }
 
-const DB_PATH = path.join(DB_DIR, 'andy.db');
+const DB_PATH = path.join(DB_DIR, 'qwerty.db');
 export const db = new Database(DB_PATH);
 
 // Configure WAL mode for concurrency and performance

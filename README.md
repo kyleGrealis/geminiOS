@@ -11,13 +11,13 @@ geminiOS/
 ├── package.json         # Runtime dependencies (discord.js, @google/genai, js-yaml, better-sqlite3)
 ├── .env                 # API Keys and system configuration (git-ignored)
 ├── config/
-│   ├── andy-persona.md  # System instructions (hot-reloaded on every turn)
+│   ├── qwerty-persona.md  # System instructions (hot-reloaded on every turn)
 │   └── permissions.yaml # Declares default/channel models, thinking configs, and command blacklists
 ├── blueprints/          # Prompt templates for scheduled tasks (weather, lessons, briefings)
 ├── data/
-│   └── andy.db          # WAL SQLite database hosting task scheduling tables and tool audit logs
+│   └── qwerty.db          # WAL SQLite database hosting task scheduling tables and tool audit logs
 ├── keys/
-│   ├── andy_ed25519     # Dedicated SSH private key for remote hosts execution
+│   ├── qwerty_ed25519     # Dedicated SSH private key for remote hosts execution
 │   └── config           # Localized SSH configuration profile mapping remote hosts
 ├── scripts/
 │   └── link-systemd.sh  # Script to symlink deploy unit and reload user systemd

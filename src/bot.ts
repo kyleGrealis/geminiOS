@@ -39,7 +39,7 @@ client.on('messageCreate', async (message) => {
   // 1. Ignore bot messages and system events
   if (message.author.bot) return;
 
-  // Verify Andy is mentioned or it's a DM, or it's one of his dedicated channels
+  // Verify Qwerty is mentioned or it's a DM, or it's one of his dedicated channels
   const botUser = client.user;
   if (!botUser) return;
 
@@ -47,7 +47,7 @@ client.on('messageCreate', async (message) => {
   const isDM = !message.guild;
   const channelName = (message.channel as any).name || 'main';
   
-  // Dedicated channels Andy monitors automatically without pings
+  // Dedicated channels Qwerty monitors automatically without pings
   const monitoredChannels = ['main', 'weather', 'news', 'misc', 'typescript', 'devops', 'logs', 'issues'];
   const isMonitoredChannel = monitoredChannels.some(ch => channelName.toLowerCase().includes(ch));
 

@@ -1,7 +1,7 @@
 Generate my daily morning briefing for today's date.
 
 You MUST use your tools to gather real data before writing the report. Do these tasks in order:
-1. List events on both my calendar and Andy's calendar for today.
+1. List events on both my calendar and Qwerty's calendar for today.
 2. Check my Gmail inbox for unread messages (subjects and senders).
 3. Check my Gmail spam folder for anything that looks interesting or important.
 
@@ -25,7 +25,7 @@ Here is your daily briefing for today:
 
 Mandates:
 - Use emojis for section headers.
-- Tone: Warm, collaborative -- you're Andy, not a corporate newsletter.
+- Tone: Warm, collaborative -- you're Qwerty, not a corporate newsletter.
 - No trailing "how can I help" or "what would you like to do" offers.
 - No emdashes anywhere.
 - If a tool call fails, note what you couldn't fetch and move on. Don't skip the whole report.

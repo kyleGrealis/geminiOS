@@ -7,7 +7,7 @@ import { getPermissions } from './config.ts';
 
 const execAsync = promisify(exec);
 
-const MEMORY_DIR = path.resolve('/home/kyle/Documents/obsidian/AndyMemory');
+const MEMORY_DIR = path.resolve('/home/kyle/Documents/obsidian/QwertyMemory');
 const TASK_CONFIG_PATH = path.resolve('/home/kyle/.gemini/state/task-config.json');
 
 // --- Helper: Refresh Google API Token ---
@@ -251,7 +251,7 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
   recall_memory: async ({ query }) => {
     try {
       const searchDirs = [
-        '/home/kyle/Documents/obsidian/AndyMemory',
+        '/home/kyle/Documents/obsidian/QwertyMemory',
         '/home/kyle/Documents/obsidian/dev',
         '/home/kyle/Documents/obsidian/dev/AI-Knowledge-Base/concepts',
         '/home/kyle/Documents/obsidian/dev/AI-Knowledge-Base/connections'

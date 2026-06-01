@@ -1,4 +1,4 @@
-# Permissions for Andy (geminiOS)
+# Permissions for Qwerty (geminiOS)
 default:
   model: gemini-3.5-flash
   thinking_level: 0 # 0 = off, 1 = on

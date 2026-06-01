@@ -4,7 +4,7 @@ import { syncDefaultTasks, startScheduler } from './scheduler.ts';
 
 async function main() {
   console.log('--------------------------------------------');
-  console.log('Andy (geminiOS) starting up...');
+  console.log('Qwerty (geminiOS) starting up...');
   console.log('--------------------------------------------');
 
   // 1. Initialize SQLite Database
@@ -50,7 +50,7 @@ async function main() {
   }
 
   console.log('--------------------------------------------');
-  console.log('Andy is online and ready!');
+  console.log('Qwerty is online and ready!');
   console.log('--------------------------------------------');
 }
 

@@ -18,8 +18,8 @@ data/
 
 # SSH credentials & secure host profiles
 keys/
-keys/andy_ed25519
-keys/andy_ed25519.pub
+keys/qwerty_ed25519
+keys/qwerty_ed25519.pub
 keys/config
 
 # Logs

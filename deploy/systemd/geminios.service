@@ -1,5 +1,5 @@
 [Unit]
-Description=Andy (geminiOS) Discord Bot
+Description=Qwerty (geminiOS) Discord Bot
 After=network-online.target
 Wants=network-online.target
 
@@ -18,7 +18,7 @@ BindPaths=/home/kyle/geminiOS
 BindPaths=/home/kyle/.gemini/state
 BindPaths=/home/kyle/.gemini/tmp/kyle
 BindReadOnlyPaths=/home/kyle/Documents/obsidian
-BindPaths=/home/kyle/Documents/obsidian/AndyMemory
+BindPaths=/home/kyle/Documents/obsidian/QwertyMemory
 BindReadOnlyPaths=/home/kyle/.config/gmail-mcp
 BindReadOnlyPaths=/home/kyle/.config/google-calendar-mcp
 BindReadOnlyPaths=/home/kyle/.config/google-drive-mcp
