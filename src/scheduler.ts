@@ -80,29 +80,29 @@ export function syncDefaultTasks() {
       id: 'core_morning_weather',
       kind: 'recurring',
       cron: '30 6 * * *', // 6:30 AM daily
-      blueprint: 'blueprints/weather.md',
-      channel_id: '1503567250685300806' // #weather
+      blueprint: 'blueprints/weather-morning.md',
+      channel_id: '1494156244439666829' // #weather
     },
     {
       id: 'core_morning_report',
       kind: 'recurring',
       cron: '0 7 * * 1-5', // 7:00 AM Mon-Fri
       blueprint: 'blueprints/morning-report.md',
-      channel_id: '1506060114090528788' // #main
+      channel_id: '1505347468785619014' // #main
     },
     {
       id: 'core_typescript_lesson',
       kind: 'recurring',
       cron: '0 8 * * 1-5', // 8:00 AM Mon-Fri
       blueprint: 'blueprints/ts-lesson.md',
-      channel_id: '1503568503645540443' // #typescript
+      channel_id: '1494156616071643386' // #typescript-learning
     },
     {
       id: 'core_evening_weather',
       kind: 'recurring',
-      cron: '0 21 * * *', // 9:00 PM daily
-      blueprint: 'blueprints/weather.md',
-      channel_id: '1503567250685300806' // #weather
+      cron: '0 20 * * *', // 8:00 PM daily
+      blueprint: 'blueprints/weather-evening.md',
+      channel_id: '1494156244439666829' // #weather
     }
   ];
 

@@ -207,17 +207,24 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
   execute_command: async ({ command }) => {
     const perms = getPermissions();
 
-    // 1. Verify against explicit deny keywords/command starts
+    // 1. Verify against explicit deny/allow keywords
     const cleanCommand = command.trim();
     const commandWords = cleanCommand.split(/\s+/);
     const commandBase = commandWords[0]?.toLowerCase();
 
-    const isDenied = perms.bash.deny.some(deny => 
-      commandBase === deny || cleanCommand.toLowerCase().includes(deny)
+    // Deny check using regex word boundaries to avoid false positives (e.g. format=j1)
+    const isDenied = perms.bash.deny.some(deny => {
+      const regex = new RegExp('\\b' + deny + '\\b', 'i');
+      return regex.test(cleanCommand);
+    });
+
+    // Allow check (must start with or match allowed prefix)
+    const isAllowed = perms.bash.allow.some(allow => 
+      commandBase === allow || cleanCommand.startsWith(allow)
     );
 
-    if (isDenied) {
-      return `Error: Command execution blocked by security policy (denylist match: '${commandBase}').`;
+    if (isDenied || !isAllowed) {
+      return `Error: Command execution blocked by security policy (command is not in the allowlist or matched denylist).`;
     }
 
     // 2. Perform execution
