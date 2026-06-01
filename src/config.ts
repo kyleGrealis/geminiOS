@@ -68,12 +68,21 @@ export function getPermissions(): PermissionsConfig {
 }
 
 export function getSystemInstructions(): string {
+  let instructions = 'You are Qwerty, Kyle\'s personal assistant and sysadmin.';
   try {
     if (fs.existsSync(PERSONA_PATH)) {
-      return fs.readFileSync(PERSONA_PATH, 'utf8');
+      instructions = fs.readFileSync(PERSONA_PATH, 'utf8');
     }
   } catch (error) {
     console.error('[Config] Failed to read qwerty-persona.md:', error);
   }
-  return 'You are Qwerty, Kyle\'s personal assistant and sysadmin.';
+
+  // Dynamically append the current date and time to ground the model temporally
+  const now = new Date();
+  const dateStr = now.toLocaleString('en-US', {
+    timeZone: 'America/Chicago',
+    dateStyle: 'full',
+    timeStyle: 'long'
+  });
+  return `${instructions}\n\n## Temporal Grounding\n- **Current Local Time:** ${dateStr} (America/Chicago)\n`;
 }
