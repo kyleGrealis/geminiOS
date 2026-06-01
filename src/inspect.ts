@@ -3,19 +3,33 @@ import * as path from 'path';
 
 const DB_PATH = path.resolve(import.meta.dirname, '../data/qwerty.db');
 
-function inspect(lastCount = 5) {
+function inspect(lastCount = 5, searchPattern?: string) {
   const db = new Database(DB_PATH, { readonly: true });
 
   console.log('================================================================');
-  console.log(`           geminiOS Interaction Inspector (Last ${lastCount})`);
+  if (searchPattern) {
+    console.log(`           geminiOS Interaction Inspector (Search: "${searchPattern}")`);
+  } else {
+    console.log(`           geminiOS Interaction Inspector (Last ${lastCount})`);
+  }
   console.log('================================================================\n');
 
   try {
-    const interactions = db.prepare(`
-      SELECT * FROM interaction_log
-      ORDER BY ts DESC
-      LIMIT ?
-    `).all(lastCount) as any[];
+    let interactions: any[] = [];
+    if (searchPattern) {
+      interactions = db.prepare(`
+        SELECT * FROM interaction_log
+        WHERE prompt LIKE ? OR response LIKE ?
+        ORDER BY ts DESC
+        LIMIT ?
+      `).all(`%${searchPattern}%`, `%${searchPattern}%`, lastCount) as any[];
+    } else {
+      interactions = db.prepare(`
+        SELECT * FROM interaction_log
+        ORDER BY ts DESC
+        LIMIT ?
+      `).all(lastCount) as any[];
+    }
 
     if (interactions.length === 0) {
       console.log('No interactions logged yet.');
@@ -61,4 +75,13 @@ if (lastIndex !== -1 && process.argv[lastIndex + 1]) {
   last = parseInt(process.argv[lastIndex + 1], 10) || 5;
 }
 
-inspect(last);
+const searchIndex = process.argv.indexOf('--search');
+let searchPattern: string | undefined = undefined;
+if (searchIndex !== -1 && process.argv[searchIndex + 1]) {
+  searchPattern = process.argv[searchIndex + 1];
+  if (lastIndex === -1) {
+    last = 10; // Default to showing up to 10 matching logs when searching
+  }
+}
+
+inspect(last, searchPattern);

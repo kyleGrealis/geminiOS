@@ -79,11 +79,11 @@ export const toolDeclarations = [
   },
   {
     name: 'recall_memory',
-    description: 'Search Obsidian long-term memories for a specific topic, keyword, or slug.',
+    description: 'Search Obsidian long-term wiki notes, compiled knowledge indices, and past Discord conversation logs for a specific topic, keyword, or query.',
     parameters: {
       type: 'OBJECT',
       properties: {
-        query: { type: 'STRING', description: 'Search term or kebab-case memory slug.' }
+        query: { type: 'STRING', description: 'Search term, keyword, or kebab-case memory slug.' }
       },
       required: ['query']
     }
@@ -253,6 +253,7 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
       const searchDirs = [
         '/home/kyle/Documents/obsidian/QwertyMemory',
         '/home/kyle/Documents/obsidian/dev',
+        '/home/kyle/Documents/obsidian/dev/AI-Knowledge-Base',
         '/home/kyle/Documents/obsidian/dev/AI-Knowledge-Base/concepts',
         '/home/kyle/Documents/obsidian/dev/AI-Knowledge-Base/connections'
       ];
@@ -269,8 +270,10 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
         searchTerms.push(queryLower);
       }
 
-      const results: { file: string; content: string }[] = [];
+      const results: string[] = [];
 
+      // --- Part A: Search Obsidian Markdown Files ---
+      const fileMatches: { file: string; content: string }[] = [];
       for (const dir of searchDirs) {
         if (!fs.existsSync(dir)) continue;
         const files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
@@ -280,25 +283,68 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
           const contentLower = content.toLowerCase();
           const fileLower = file.toLowerCase();
 
-          // Match if every search term is found in either the filename or file content
-          const isMatch = searchTerms.every(term => 
-            fileLower.includes(term) || contentLower.includes(term)
-          );
+          // Match if every search term is found as a whole word to prevent false positives (e.g. "race" matching "graceful")
+          const isMatch = searchTerms.every(term => {
+            const regex = new RegExp('\\b' + term + '\\b', 'i');
+            return regex.test(fileLower) || regex.test(contentLower);
+          });
 
           if (isMatch) {
             // Strip frontmatter metadata tags for cleaner context ingestion
             const body = content.replace(/^---\n[\s\S]*?\n---\n/, '');
-            results.push({ file: path.basename(file), content: body });
+            fileMatches.push({ file: path.basename(file), content: body });
           }
         }
       }
 
-      if (results.length === 0) {
-        return `No memories matched query: "${query}" (Terms: ${searchTerms.join(', ')})`;
+      if (fileMatches.length > 0) {
+        const slicedFiles = fileMatches.slice(0, 3);
+        const fileContent = slicedFiles.map(r => `[Obsidian Note: ${r.file}]\n${r.content.trim()}`).join('\n\n');
+        results.push(`=== Obsidian Notes ===\n${fileContent}`);
       }
 
-      const sliced = results.slice(0, 5);
-      return sliced.map(r => `--- Knowledge: ${r.file} ---\n${r.content.trim()}`).join('\n\n');
+      // --- Part B: Search SQLite Conversation Logs ---
+      try {
+        const { db } = await import('./db.ts');
+        
+        // Fetch recent logs to filter using strict word boundaries in JS
+        const rows = db.prepare(`
+          SELECT ts, channel, prompt, response FROM interaction_log
+          ORDER BY ts DESC
+          LIMIT 300
+        `).all() as any[];
+
+        const dbMatches: any[] = [];
+        for (const row of rows) {
+          const promptLower = (row.prompt || '').toLowerCase();
+          const responseLower = (row.response || '').toLowerCase();
+
+          const isMatch = searchTerms.every(term => {
+            const regex = new RegExp('\\b' + term + '\\b', 'i');
+            return regex.test(promptLower) || regex.test(responseLower);
+          });
+
+          if (isMatch) {
+            dbMatches.push(row);
+          }
+        }
+
+        if (dbMatches.length > 0) {
+          const slicedDb = dbMatches.slice(0, 10); // Return up to 10 matching conversation items
+          const dbContent = slicedDb.map(m => 
+            `[${m.ts}] [Channel: #${m.channel}]\nUser: "${m.prompt}"\nQwerty: "${m.response}"`
+          ).join('\n---\n');
+          results.push(`=== Past Conversation Logs ===\n${dbContent}`);
+        }
+      } catch (dbErr: any) {
+        console.error('[recall_memory] Failed to search DB logs:', dbErr);
+      }
+
+      if (results.length === 0) {
+        return `No notes or conversation logs matched query: "${query}" (Terms: ${searchTerms.join(', ')})`;
+      }
+
+      return results.join('\n\n');
     } catch (error: any) {
       return `Error recalling memory: ${error.message}`;
     }

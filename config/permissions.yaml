@@ -38,6 +38,7 @@ bash:
     - "tail"
     - "head"
     - "journalctl"
+    - "npm run inspect"
   deny:
     - "rm"
     - "mv"
