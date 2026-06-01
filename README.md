@@ -1,6 +1,6 @@
 # geminiOS
 
-A native, lightweight, sandboxed, and near-zero latency Discord AI assistant running natively under systemd on a Raspberry Pi 5.
+A native, lightweight, sandboxed, and near-zero latency Discord AI assistant running natively under systemd.
 
 This project replaces complex container/MCP layers with a single persistent Node.js ESM daemon communicating directly with the Discord Gateway.
 
@@ -18,7 +18,7 @@ geminiOS/
 │   └── andy.db          # WAL SQLite database hosting task scheduling tables and tool audit logs
 ├── keys/
 │   ├── andy_ed25519     # Dedicated SSH private key for remote hosts execution
-│   └── config           # Localized SSH configuration profile mapping remote host IPs
+│   └── config           # Localized SSH configuration profile mapping remote hosts
 ├── scripts/
 │   └── link-systemd.sh  # Script to symlink deploy unit and reload user systemd
 ├── deploy/

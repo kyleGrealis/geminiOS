@@ -1,6 +1,6 @@
 # geminiOS User Manual & Operator Guide
 
-Welcome to the operator manual for **geminiOS**, Kyle's native, sandboxed, low-latency companion daemon. This guide covers how to interact with Andy, customize his features, and maintain his execution sandboxing.
+Welcome to the operator manual for **geminiOS**, your native, sandboxed, low-latency companion daemon. This guide covers how to interact with Andy, customize his features, and maintain his execution sandboxing.
 
 ---
 
@@ -31,7 +31,7 @@ Andy can search the web and capture live webpage images for you:
 ### 💾 Obsidian Memory (recall_memory & save_memory)
 Andy manages facts and connections inside your personal Obsidian Vault:
 * **Recall Memory:** Searches your vault (under `AndyMemory/` and `dev/AI-Knowledge-Base/`). Queries are automatically parsed into keyword components to perform AND-based matches.
-* **Save Memory:** Appends new facts dynamically to markdown shards inside `/home/kyle/Documents/obsidian/AndyMemory/<slug>.md`.
+* **Save Memory:** Appends new facts dynamically to markdown shards inside your Obsidian Vault under `AndyMemory/<slug>.md`.
 
 ### 📧 Google Workspace Integration
 Andy interacts directly with your Google Workspace accounts using lightweight REST API fetches:
@@ -39,10 +39,10 @@ Andy interacts directly with your Google Workspace accounts using lightweight RE
 * **Drive:** Searches for files or folders (`google_drive_list_files`).
 * **Calendar:** Reads calendar timelines (`google_calendar_list_events`).
 
-### 💻 Remote SSH Command Execution (archMitters)
-Andy can connect passwordlessly to your main development host `archmitters`:
-* **Under the Hood:** Executes command strings over SSH using the keys and configs under `/home/kyle/geminiOS/keys/`.
-* **Security Filter:** Commands are parsed and filtered locally on the Pi 5. If the command string includes any restricted keywords (like `rm` or `sudo`), the local gateway blocks execution immediately, preventing remote system damage.
+### 💻 Remote SSH Command Execution
+Andy can connect passwordlessly to your configured remote development host:
+* **Under the Hood:** Executes command strings over SSH using the keys and configs under `./keys/`.
+* **Security Filter:** Commands are parsed and filtered locally. If the command string includes any restricted keywords (like `rm` or `sudo`), the local gateway blocks execution immediately, preventing remote system damage.
 
 ---
 
@@ -74,5 +74,5 @@ This CLI inspector queries `andy.db` directly in WAL mode and outputs a timeline
 
 ### Sandboxing (ProtectSystem)
 Andy runs inside a kernel-level Systemd namespace jail:
-* **Write Blocks:** Writes outside of `~/geminiOS`, `~/.gemini/state`, `~/.gemini/tmp/kyle`, and `AndyMemory/` are blocked at the OS kernel level.
-* **Credential Protection:** Andy has a blanked out `ProtectHome=tmpfs` user namespace, preventing him from seeing `~/.ssh/`, bash history, or system config files.
+* **Write Blocks:** Writes outside of the project root, task configuration folders, temporary directories, and `AndyMemory/` are blocked at the OS kernel level.
+* **Credential Protection:** Andy has a blanked out `ProtectHome=tmpfs` user namespace, preventing him from seeing host SSH keys, shell history, or system config files.
