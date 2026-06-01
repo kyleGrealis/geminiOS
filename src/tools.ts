@@ -253,7 +253,9 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
     // 2. Perform execution
     try {
       console.log(`[Tool] Executing command: ${command}`);
-      const { stdout, stderr } = await execAsync(command, { timeout: 30000 });
+      const localBin = path.resolve(import.meta.dirname, '../bin');
+      const env = { ...process.env, PATH: `${localBin}:${process.env.PATH}` };
+      const { stdout, stderr } = await execAsync(command, { env, timeout: 30000 });
       return { stdout, stderr };
     } catch (error: any) {
       return { error: error.message, stdout: error.stdout, stderr: error.stderr };
