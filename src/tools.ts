@@ -115,6 +115,51 @@ export const toolDeclarations = [
     }
   },
   {
+    name: 'google_calendar_create_event',
+    description: 'Create a new event on a calendar.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        calendarId: { type: 'STRING', description: 'Calendar ID, usually "primary" or email address.' },
+        summary: { type: 'STRING', description: 'The title/summary of the event.' },
+        location: { type: 'STRING', description: 'Optional location.' },
+        description: { type: 'STRING', description: 'Optional description.' },
+        start: { type: 'STRING', description: 'Start date-time in ISO format (e.g. "2026-05-31T09:00:00Z") or date (e.g. "2026-05-31").' },
+        end: { type: 'STRING', description: 'End date-time in ISO format (e.g. "2026-05-31T10:00:00Z") or date (e.g. "2026-05-31").' }
+      },
+      required: ['calendarId', 'summary', 'start', 'end']
+    }
+  },
+  {
+    name: 'google_calendar_patch_event',
+    description: 'Patch/update an existing event on a calendar. Only include fields that need modification.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        calendarId: { type: 'STRING', description: 'Calendar ID, usually "primary" or email address.' },
+        eventId: { type: 'STRING', description: 'The unique ID of the event to update.' },
+        summary: { type: 'STRING', description: 'Optional updated title/summary.' },
+        location: { type: 'STRING', description: 'Optional updated location.' },
+        description: { type: 'STRING', description: 'Optional updated description.' },
+        start: { type: 'STRING', description: 'Optional updated start date-time in ISO format or date.' },
+        end: { type: 'STRING', description: 'Optional updated end date-time in ISO format or date.' }
+      },
+      required: ['calendarId', 'eventId']
+    }
+  },
+  {
+    name: 'google_calendar_delete_event',
+    description: 'Delete an event from a calendar.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        calendarId: { type: 'STRING', description: 'Calendar ID, usually "primary" or email address.' },
+        eventId: { type: 'STRING', description: 'The unique ID of the event to delete.' }
+      },
+      required: ['calendarId', 'eventId']
+    }
+  },
+  {
     name: 'google_gmail_list_messages',
     description: 'List Gmail message metadata matching a query.',
     parameters: {
@@ -417,6 +462,7 @@ ${finalFact.startsWith('- ') || finalFact.includes('\n') ? finalFact : `- ${fina
 
       const data: any = await res.json();
       return (data.items || []).map((e: any) => ({
+        id: e.id,
         summary: e.summary,
         location: e.location,
         description: e.description,
@@ -425,6 +471,105 @@ ${finalFact.startsWith('- ') || finalFact.includes('\n') ? finalFact : `- ${fina
       }));
     } catch (error: any) {
       return `Error fetching calendar events: ${error.message}`;
+    }
+  },
+
+  google_calendar_create_event: async ({ calendarId, summary, location, description, start, end }) => {
+    try {
+      const token = await getGoogleAccessToken('calendar');
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
+      const startKey = start.includes('T') ? 'dateTime' : 'date';
+      const endKey = end.includes('T') ? 'dateTime' : 'date';
+      const body = {
+        summary,
+        location,
+        description,
+        start: { [startKey]: start },
+        end: { [endKey]: end }
+      };
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) throw new Error(`Google Calendar API error: ${await res.text()}`);
+
+      const data: any = await res.json();
+      return {
+        id: data.id,
+        summary: data.summary,
+        start: data.start?.dateTime || data.start?.date,
+        end: data.end?.dateTime || data.end?.date,
+        status: 'created'
+      };
+    } catch (error: any) {
+      return `Error creating calendar event: ${error.message}`;
+    }
+  },
+
+  google_calendar_patch_event: async ({ calendarId, eventId, summary, location, description, start, end }) => {
+    try {
+      const token = await getGoogleAccessToken('calendar');
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+      const body: any = {};
+      if (summary !== undefined) body.summary = summary;
+      if (location !== undefined) body.location = location;
+      if (description !== undefined) body.description = description;
+      if (start !== undefined) {
+        const startKey = start.includes('T') ? 'dateTime' : 'date';
+        body.start = { [startKey]: start };
+      }
+      if (end !== undefined) {
+        const endKey = end.includes('T') ? 'dateTime' : 'date';
+        body.end = { [endKey]: end };
+      }
+
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) throw new Error(`Google Calendar API error: ${await res.text()}`);
+
+      const data: any = await res.json();
+      return {
+        id: data.id,
+        summary: data.summary,
+        start: data.start?.dateTime || data.start?.date,
+        end: data.end?.dateTime || data.end?.date,
+        status: 'updated'
+      };
+    } catch (error: any) {
+      return `Error patching calendar event: ${error.message}`;
+    }
+  },
+
+  google_calendar_delete_event: async ({ calendarId, eventId }) => {
+    try {
+      const token = await getGoogleAccessToken('calendar');
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) throw new Error(`Google Calendar API error: ${await res.text()}`);
+
+      return { eventId, status: 'deleted' };
+    } catch (error: any) {
+      return `Error deleting calendar event: ${error.message}`;
     }
   },
 
