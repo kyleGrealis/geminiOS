@@ -9,15 +9,33 @@ Use a web request or run a local curl command to retrieve the weather forecast:
   * Retrieve coordinates (e.g., 32.8625,-96.7578 for Dallas 75231) and query the National Weather Service API (`https://api.weather.gov/points/<lat>,<lon>`) to get the forecast endpoint, then fetch the forecast JSON from there.
 - **For non-US Locations or as a simple fallback:** Query `https://wttr.in/<city>?format=j1`, replacing spaces with `+` (e.g., `Dallas,+TX+75231` or `San+Francisco`).
 
-Formulate a clean, structured evening weather report starting directly with the details:
-- Do NOT begin with conversational greetings to a specific person (e.g. avoid "Hey Kyle!" or "Hey Alexa!"). A neutral greeting like "Good evening!" or "Good evening!" is fine, or start directly.
-- Do NOT output verbose out-loud thinking about checking the calendar or finding no travel events. Only mention the location if it is a travel destination (e.g., "Weather report for your trip to Denver").
-- Do NOT include technical phrasing like "from weather array" or "from current_condition".
-- Include:
-  * Date & time
-  * Current conditions (temperature, condition, wind, humidity)
-  * Overnight forecast (Tonight's Low and expected overnight conditions)
-  * Tomorrow's forecast (Tomorrow's High and Low temperatures, expected conditions for tomorrow)
-  * A TL;DR summary for tomorrow (e.g., tomorrow's heat indices, weather changes, warnings).
+Formulate a clean, structured evening weather report:
+- Start with a neutral greeting like: "Good evening! Here is your evening weather report:"
+- Do NOT begin with conversational greetings to a specific person (e.g. avoid "Hey Kyle!" or "Hey Alexa!").
+- Do NOT output verbose out-loud thinking about checking the calendar or finding no travel events.
+- Do NOT include technical phrasing (like "from weather array" or API terminology).
+- Use Fahrenheit only (do NOT include Celsius/metric conversions).
+- Use standard wind direction abbreviations (e.g. "S", "SSE" instead of spelling them out).
+- Structure the report exactly like this:
+
+[emoji: 🌴 if traveling, 🏡 if home] **Weather Report for <Location>**
+📅 **Date & Time:** <Day of week, Month Date, Year at Current Time>
+📍 **Current Conditions:**
+* **Temperature:** <Temp>°F (include "feels like" if different)
+* **Condition:** <Condition>
+* **Wind:** <Direction> at <Speed> mph
+* **Humidity:** <Percentage>%
+
+🌙 **Overnight Forecast (Tonight):**
+* **Tonight's Low:** <Low>°F
+* **Conditions:** <Forecast description>
+
+☀️ **Tomorrow's Forecast (<Day of week, Month Date>):**
+* **Tomorrow's High:** <High>°F | **Tomorrow's Low:** <Low>°F
+* **Conditions:** <Forecast description>
+* **Wind:** <Forecast wind>
+
+📋 **TL;DR Summary:**
+<A short, one-sentence summary for tomorrow.>
 
 Deliver the final weather report to the current Discord channel.

@@ -86,7 +86,7 @@ export function syncDefaultTasks() {
     {
       id: 'core_morning_report',
       kind: 'recurring',
-      cron: '0 7 * * 1-5', // 7:00 AM Mon-Fri
+      cron: '30 6 * * *', // 6:30 AM daily
       blueprint: 'blueprints/morning-report.md',
       channel_id: '1505347468785619014' // #main
     },
@@ -143,25 +143,40 @@ export function startScheduler(discordClient: any) {
 }
 
 const activeJobs = new Set<string>();
+let isSweepActive = false;
 
 async function runSweep(discordClient: any) {
-  const nowStr = new Date().toISOString();
-  
-  // Find all due jobs
-  const dueJobs = db.prepare(`
-    SELECT * FROM jobs 
-    WHERE status = 'pending' AND (process_after IS NULL OR process_after <= ?)
-  `).all(nowStr) as any[];
+  if (isSweepActive) {
+    console.log('[Scheduler] Sweep already in progress, skipping tick');
+    return;
+  }
+  isSweepActive = true;
 
-  for (const job of dueJobs) {
-    if (activeJobs.has(job.id)) {
-      console.log(`[Scheduler] Skipping job ${job.id}: already executing`);
-      continue;
-    }
+  try {
+    const nowStr = new Date().toISOString();
+    
+    // Find all due jobs
+    const dueJobs = db.prepare(`
+      SELECT * FROM jobs 
+      WHERE status = 'pending' AND (process_after IS NULL OR process_after <= ?)
+    `).all(nowStr) as any[];
 
-    activeJobs.add(job.id);
+    for (const job of dueJobs) {
+      if (activeJobs.has(job.id)) {
+        console.log(`[Scheduler] Skipping job ${job.id}: already executing`);
+        continue;
+      }
 
-    try {
+      // Re-verify the job status from the database to avoid race conditions
+      const currentJob = db.prepare('SELECT status, process_after FROM jobs WHERE id = ?').get(job.id) as any;
+      if (!currentJob || currentJob.status !== 'pending' || (currentJob.process_after && currentJob.process_after > nowStr)) {
+        console.log(`[Scheduler] Skipping job ${job.id}: status or process_after updated since sweep started`);
+        continue;
+      }
+
+      activeJobs.add(job.id);
+
+      try {
       console.log(`[Scheduler] Running due job: ${job.id}`);
       
       // 1. Evaluate pause/skip checks from task-config
@@ -357,9 +372,12 @@ async function runSweep(discordClient: any) {
           console.error('[Scheduler] Failed to send error notification to Discord:', postErr.message);
         }
       }
-    } finally {
-      activeJobs.delete(job.id);
+      } finally {
+        activeJobs.delete(job.id);
+      }
     }
+  } finally {
+    isSweepActive = false;
   }
 }
 

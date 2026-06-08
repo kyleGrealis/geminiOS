@@ -58,10 +58,10 @@ Qwerty can connect passwordlessly to your configured remote development host:
 The sweeper daemon (`src/scheduler.ts`) ticks every 30 seconds to evaluate scheduled jobs inside `qwerty.db`.
 
 ### Default Tasks
-* **6:30 AM Daily:** Weather forecast sent to `#weather` (queries Calendar first to check if you are travelling, automatically adjusting location coords if a travel event is found).
-* **7:00 AM Mon-Fri:** Morning briefing report sent to `#main`.
-* **8:00 AM Mon-Fri:** TypeScript Lesson sent to `#typescript`.
-* **8:00 AM Saturday:** TypeScript Week Recap (compiles a summary of the weekly curriculum progress) sent to `#typescript`.
+* **6:00 AM Daily:** Weather forecast sent to `#weather` (queries Calendar first to check if you are travelling, automatically adjusting location coords if a travel event is found).
+* **6:30 AM Daily:** Morning briefing report sent to `#main`.
+* **7:00 AM Mon-Fri:** TypeScript Lesson sent to `#typescript-learning`.
+* **7:00 AM Saturday:** TypeScript Week Recap (compiles a summary of the weekly curriculum progress) sent to `#typescript-learning`.
 * **8:00 PM Daily:** Evening weather update.
 
 ### Smart Lesson Pausing & Configurations
