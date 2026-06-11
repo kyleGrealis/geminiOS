@@ -35,7 +35,10 @@ lerna-debug.log*
 .pnpm-store/
 .pnpm-debug.log
 .gemini/
+.agents/
+.agent/
 *.tmp
 .DS_Store
 attachments/
+
 
