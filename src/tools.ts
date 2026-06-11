@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -6,6 +6,7 @@ import * as os from 'os';
 import { getPermissions } from './config.ts';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 const MEMORY_DIR = path.resolve('/home/kyle/Documents/obsidian/QwertyMemory');
 const TASK_CONFIG_PATH = path.resolve('/home/kyle/.gemini/state/task-config.json');
@@ -271,6 +272,32 @@ export const toolDeclarations = [
   }
 ];
 
+function parseCommandLine(cmd: string): string[] {
+  const args: string[] = [];
+  let current = '';
+  let inDoubleQuotes = false;
+  let inSingleQuotes = false;
+  for (let i = 0; i < cmd.length; i++) {
+    const char = cmd[i];
+    if (char === '"' && !inSingleQuotes) {
+      inDoubleQuotes = !inDoubleQuotes;
+    } else if (char === '\'' && !inDoubleQuotes) {
+      inSingleQuotes = !inSingleQuotes;
+    } else if (char === ' ' && !inDoubleQuotes && !inSingleQuotes) {
+      if (current) {
+        args.push(current);
+        current = '';
+      }
+    } else {
+      current += char;
+    }
+  }
+  if (current) {
+    args.push(current);
+  }
+  return args;
+}
+
 // --- Implementation Handlers ---
 export const toolHandlers: { [toolName: string]: (args: any, context?: any) => Promise<any> } = {
   execute_command: async ({ command }) => {
@@ -296,12 +323,51 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
       return `Error: Command execution blocked by security policy (command is not in the allowlist or matched denylist).`;
     }
 
+    // Parse command line into arguments to prevent shell chaining and backdoor injections
+    const parsedArgs = parseCommandLine(cleanCommand);
+    const binary = parsedArgs[0];
+    const cmdArgs = parsedArgs.slice(1);
+
+    if (!binary) {
+      return `Error: Empty command.`;
+    }
+
+    // Strict parameter sanitization for ssh and curl
+    const binaryBase = binary.toLowerCase();
+    if (binaryBase === 'ssh') {
+      const hasForbidden = cmdArgs.some(arg => {
+        return /^-([oFLRD]|ProxyCommand)/.test(arg) || arg === '--config';
+      });
+      if (hasForbidden) {
+        return `Error: Command execution blocked. Dangerous SSH option flag detected.`;
+      }
+    }
+
+    if (binaryBase === 'curl') {
+      const hasForbidden = cmdArgs.some((arg, index) => {
+        if (/^-([FTo]|form|upload-file|output|config)/.test(arg)) {
+          return true;
+        }
+        if ((arg === '-d' || arg === '--data' || arg === '--data-raw' || arg === '--data-binary') && index + 1 < cmdArgs.length) {
+          const nextArg = cmdArgs[index + 1];
+          if (nextArg.startsWith('@')) return true;
+        }
+        if (/^--data.*=@/.test(arg)) {
+          return true;
+        }
+        return false;
+      });
+      if (hasForbidden) {
+        return `Error: Command execution blocked. Dangerous curl option flag or file-read argument detected.`;
+      }
+    }
+
     // 2. Perform execution
     try {
-      console.log(`[Tool] Executing command: ${command}`);
+      console.log(`[Tool] Executing command: ${binary} with args: ${JSON.stringify(cmdArgs)}`);
       const localBin = path.resolve(import.meta.dirname, '../bin');
       const env = { ...process.env, PATH: `${localBin}:${process.env.PATH}` };
-      const { stdout, stderr } = await execAsync(command, { env, timeout: 30000 });
+      const { stdout, stderr } = await execFileAsync(binary, cmdArgs, { env, timeout: 30000 });
       return { stdout, stderr };
     } catch (error: any) {
       return { error: error.message, stdout: error.stdout, stderr: error.stderr };
