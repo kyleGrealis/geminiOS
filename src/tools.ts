@@ -335,11 +335,26 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
     // Strict parameter sanitization for ssh and curl
     const binaryBase = binary.toLowerCase();
     if (binaryBase === 'ssh') {
-      const hasForbidden = cmdArgs.some(arg => {
-        return /^-([oFLRD]|ProxyCommand)/.test(arg) || arg === '--config';
-      });
-      if (hasForbidden) {
-        return `Error: Command execution blocked. Dangerous SSH option flag detected.`;
+      for (let i = 0; i < cmdArgs.length; i++) {
+        const arg = cmdArgs[i];
+        if (arg === '-F') {
+          const nextArg = cmdArgs[i + 1];
+          if (nextArg !== '/home/kyle/geminiOS/keys/config') {
+            return `Error: Command execution blocked. Dangerous SSH option flag detected.`;
+          }
+          i++; // Skip config file path argument
+          continue;
+        }
+        if (arg.startsWith('-F')) {
+          const pathPart = arg.slice(2);
+          if (pathPart !== '/home/kyle/geminiOS/keys/config') {
+            return `Error: Command execution blocked. Dangerous SSH option flag detected.`;
+          }
+          continue;
+        }
+        if (/^-([oLRD]|ProxyCommand)/.test(arg) || arg === '--config') {
+          return `Error: Command execution blocked. Dangerous SSH option flag detected.`;
+        }
       }
     }
 
