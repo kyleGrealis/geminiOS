@@ -27,21 +27,21 @@ const TASK_CONFIG_PATH = path.resolve('/home/kyle/.gemini/state/task-config.json
 const PROGRESS_PATH = path.resolve('/home/kyle/.gemini/tmp/kyle/ts-lesson-progress.json');
 
 const CURRICULUM = [
-  "Primitive Types & Type Annotations",
-  "Interfaces & Type Aliases",
-  "Functions & Return Types",
-  "Arrays & Tuples",
-  "Generics Basics",
-  "Enums & Literal Types",
-  "Union Types",
-  "Intersection Types",
-  "Type Guards & Narrowing",
-  "Utility Types (Partial, Pick, Omit, Record)",
-  "Type Assertions & the 'as' Keyword",
-  "Promise Types & Async/Await Typing",
-  "Module Systems (ESM vs CJS in Node)",
-  "Declaration Files & DefinitelyTyped",
-  "Discriminated Unions & Exhaustiveness Checking",
+  "From JavaScript to TypeScript (Ch 1)",
+  "The Type System & Primitive Types (Ch 2)",
+  "Unions and Literals (Ch 3)",
+  "Objects (Ch 4)",
+  "Functions & Parameters (Ch 5)",
+  "Arrays & Tuples (Ch 6)",
+  "Interfaces (Ch 7)",
+  "Classes (Ch 8)",
+  "Type Modifiers & Assertions (Ch 9)",
+  "Generics (Ch 10)",
+  "Declaration Files (Ch 11)",
+  "Using IDE Features & Module Systems (Ch 12)",
+  "Configuration Options & tsconfig (Ch 13)",
+  "Type Operations & Advanced Mapped/Conditional Types (Ch 14)",
+  "Syntax Extensions & Enums (Ch 15)",
 ];
 
 // --- Helper: Enforce America/Chicago timezone for Cron calculations ---
