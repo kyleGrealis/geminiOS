@@ -2,6 +2,48 @@ import { Client, GatewayIntentBits, AttachmentBuilder } from 'discord.js';
 import { runAgentTurn } from './agent.ts';
 import * as fs from 'fs';
 import * as path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
+
+async function transcribeAudio(inputPath: string): Promise<string> {
+  const wavPath = inputPath.replace(/\.[^/.]+$/, "") + "_temp.wav";
+  const txtPath = wavPath + ".txt";
+  const modelPath = "/home/kyle/whisper.cpp/models/ggml-base.en.bin";
+  const whisperCli = "/home/kyle/whisper.cpp/build/bin/whisper-cli";
+
+  try {
+    console.log(`[Whisper] Converting ${inputPath} to 16kHz mono WAV at ${wavPath}`);
+    await execAsync(`ffmpeg -y -i "${inputPath}" -ar 16000 -ac 1 -c:a pcm_s16le "${wavPath}"`);
+
+    console.log(`[Whisper] Running whisper-cli on ${wavPath}`);
+    await execAsync(`"${whisperCli}" -m "${modelPath}" -f "${wavPath}" -otxt -of "${wavPath}"`);
+
+    if (fs.existsSync(txtPath)) {
+      const text = fs.readFileSync(txtPath, 'utf8').trim();
+      console.log(`[Whisper] Transcription result: "${text}"`);
+      
+      try {
+        fs.unlinkSync(wavPath);
+        fs.unlinkSync(txtPath);
+      } catch (cleanupErr) {
+        console.error('[Whisper] Failed to clean up temp files:', cleanupErr);
+      }
+      return text;
+    }
+    throw new Error("Transcription file was not generated");
+  } catch (err: any) {
+    console.error('[Whisper] Transcription failed:', err);
+    if (fs.existsSync(wavPath)) {
+      try { fs.unlinkSync(wavPath); } catch {}
+    }
+    if (fs.existsSync(txtPath)) {
+      try { fs.unlinkSync(txtPath); } catch {}
+    }
+    throw err;
+  }
+}
 
 function splitForLimit(text: string, limit: number): string[] {
   if (!text) return [];
@@ -19,6 +61,7 @@ function splitForLimit(text: string, limit: number): string[] {
   if (remaining.length > 0) chunks.push(remaining);
   return chunks;
 }
+
 
 
 export const client = new Client({
@@ -93,23 +136,37 @@ client.on('messageCreate', async (message) => {
         // Format prompt reference based on file type
         const isPdf = attachment.contentType?.toLowerCase() === 'application/pdf' || attachment.name.toLowerCase().endsWith('.pdf');
         const isImage = attachment.contentType?.startsWith('image/') || /\.(png|jpe?g|webp|gif)$/i.test(attachment.name);
+        const isAudio = attachment.contentType?.startsWith('audio/') || /\.(ogg|wav|mp3|m4a|mp4)$/i.test(attachment.name);
 
         if (isPdf) {
           promptText += `\n\n[PDF: ${relPath}]`;
         } else if (isImage) {
           promptText += `\n\n[image: ${relPath}]`;
+        } else if (isAudio) {
+          try {
+            const transcription = await transcribeAudio(localPath);
+            if (transcription) {
+              promptText += `\n\n[Audio Transcribed: "${transcription}"]`;
+            } else {
+              promptText += `\n\n[Audio attachment: ${relPath} (Empty transcription)]`;
+            }
+          } catch (transcribeErr: any) {
+            promptText += `\n\n[Audio attachment: ${relPath} (Transcription failed: ${transcribeErr.message})]`;
+          }
         } else {
           promptText += `\n\n[Attached: ${relPath}]`;
         }
 
-        // Add to inlineData parts for Gemini
-        const mimeType = attachment.contentType || 'application/octet-stream';
-        attachmentParts.push({
-          inlineData: {
-            mimeType,
-            data: buffer.toString('base64')
-          }
-        });
+        // Add to inlineData parts for Gemini (excluding audio)
+        if (!isAudio) {
+          const mimeType = attachment.contentType || 'application/octet-stream';
+          attachmentParts.push({
+            inlineData: {
+              mimeType,
+              data: buffer.toString('base64')
+            }
+          });
+        }
       } catch (err: any) {
         console.error(`[Bot] Failed to process attachment ${attachment.name}:`, err);
       }
