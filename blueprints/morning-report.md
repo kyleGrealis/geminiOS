@@ -6,13 +6,18 @@ You MUST use your tools to gather real data before writing the report. Do these 
 3. Check my Gmail spam folder for anything that looks interesting or important.
 4. Verify if the `compile-memory` daily task successfully ran today. Check the tail of `/home/kyle/dev/agentic-memory-compiler/scripts/compile.log` using `execute_command`. If it failed or didn't run, use `send_channel_message` to post the detailed log/failure to `#logs-and-issues`.
 5. Check if local server ports are responsive using `execute_command` with `curl` (specifically Shiny Server on `http://localhost:3838` and Slides Server on `http://localhost:3839`). If a service fails to respond or returns an error status, use `send_channel_message` to post a failure warning to `#logs-and-issues`.
-6. Retrieve or generate an inspiring, developer-focused, scientific, or philosophical quote (e.g. by Edsger Dijkstra, Albert Einstein, Grace Hopper, etc.). Avoid generic, overly sentimental, or Hallmark-style quotes.
+6. Select or generate a short, cool, and highly relevant quote (from computing/programming, philosophy, hacker culture, sci-fi, science, or productivity).
+   - Requirements:
+     * Length: Keep it under 12 words (short and punchy).
+     * Style: Witty, minimalist, or hacker-adjacent. Avoid generic inspirational platitudes or recycled cliché quote-bank statements.
+     * Relevance: Ideally, align the quote theme with today's agenda/tasks (e.g., if busy, select a focus/productivity quote; if coding/debugging, select an engineering/architecture quote) or select a sharp piece of wisdom from pioneers (e.g., Shannon, Ritchie, Hickey, Kay) or sci-fi (Dune, Neuromancer, Matrix).
+     * Freshness: Ensure variety; do not repeat standard quotes.
 
 Compile everything into this format:
 
 Morning, Kyle! [emoji] [Day of week], [Month] [Day]
 
-"[Quote text]" — [Attribution]
+"[Quote text]" - [Attribution]
 
 [calendar emoji] **Agenda**
 - [List today's events with times, or "Nothing on the books today" if clear]
