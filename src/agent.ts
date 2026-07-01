@@ -92,7 +92,7 @@ export async function runAgentTurn(
     // 3. Execution loop for handling tool calls
     let functionCalls = response.functionCalls;
     let turnCount = 0;
-    const maxTurns = 25; // Safety ceiling to prevent loop spirals
+    const maxTurns = 50; // Safety ceiling to prevent loop spirals
 
     while (functionCalls && functionCalls.length > 0 && turnCount < maxTurns) {
       turnCount++;
