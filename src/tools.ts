@@ -378,14 +378,30 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
     }
 
     // 2. Perform execution
+    const MAX_OUTPUT = 25000;
+    const truncateOutput = (str: string) => {
+      if (!str) return '';
+      if (str.length > MAX_OUTPUT) {
+        return str.substring(0, MAX_OUTPUT) + '\n\n[Warning: Command output truncated to 25KB to protect context budget.]';
+      }
+      return str;
+    };
+
     try {
       console.log(`[Tool] Executing command: ${binary} with args: ${JSON.stringify(cmdArgs)}`);
       const localBin = path.resolve(import.meta.dirname, '../bin');
       const env = { ...process.env, PATH: `${localBin}:${process.env.PATH}` };
       const { stdout, stderr } = await execFileAsync(binary, cmdArgs, { env, timeout: 30000 });
-      return { stdout, stderr };
+      return { 
+        stdout: truncateOutput(stdout), 
+        stderr: truncateOutput(stderr) 
+      };
     } catch (error: any) {
-      return { error: error.message, stdout: error.stdout, stderr: error.stderr };
+      return { 
+        error: error.message, 
+        stdout: truncateOutput(error.stdout), 
+        stderr: truncateOutput(error.stderr) 
+      };
     }
   },
 
@@ -471,10 +487,17 @@ export const toolHandlers: { [toolName: string]: (args: any, context?: any) => P
         }
 
         if (dbMatches.length > 0) {
-          const slicedDb = dbMatches.slice(0, 10); // Return up to 10 matching conversation items
-          const dbContent = slicedDb.map(m => 
-            `[${m.ts}] [Channel: #${m.channel}]\nUser: "${m.prompt}"\nQwerty: "${m.response}"`
-          ).join('\n---\n');
+          const slicedDb = dbMatches.slice(0, 5); // Return up to 5 matching conversation items
+          const dbContent = slicedDb.map(m => {
+            const maxValLength = 400;
+            const cleanPrompt = m.prompt.length > maxValLength 
+              ? m.prompt.substring(0, maxValLength) + '... [Prompt truncated for memory compaction]' 
+              : m.prompt;
+            const cleanResponse = m.response.length > maxValLength 
+              ? m.response.substring(0, maxValLength) + '... [Response truncated for memory compaction]' 
+              : m.response;
+            return `[${m.ts}] [Channel: #${m.channel}]\nUser: "${cleanPrompt}"\nQwerty: "${cleanResponse}"`;
+          }).join('\n---\n');
           results.push(`=== Past Conversation Logs ===\n${dbContent}`);
         }
       } catch (dbErr: any) {

@@ -27,16 +27,13 @@ const TASK_CONFIG_PATH = path.resolve('/home/kyle/.gemini/state/task-config.json
 const PROGRESS_PATH = path.resolve('/home/kyle/.gemini/tmp/kyle/ts-lesson-progress.json');
 
 const CURRICULUM = [
-  "From JavaScript to TypeScript (Ch 1)",
-  "The Type System & Primitive Types (Ch 2)",
-  "Unions and Literals (Ch 3)",
-  "Objects (Ch 4)",
-  "Functions & Parameters (Ch 5)",
-  "Arrays & Tuples (Ch 6)",
-  "Interfaces (Ch 7)",
+  "Objects & Data Schemas (Ch 4)",
+  "Functions & Callbacks (Ch 5)",
+  "Arrays & Dataframes (Ch 6)",
+  "Interfaces & Tabular Schemas (Ch 7)",
   "Classes (Ch 8)",
   "Type Modifiers & Assertions (Ch 9)",
-  "Generics (Ch 10)",
+  "Generics & Reusable Pipelines (Ch 10)",
   "Declaration Files (Ch 11)",
   "Using IDE Features & Module Systems (Ch 12)",
   "Configuration Options & tsconfig (Ch 13)",
@@ -90,20 +87,7 @@ export function syncDefaultTasks() {
       blueprint: 'blueprints/morning-report.md',
       channel_id: '1505347468785619014' // #main
     },
-    {
-      id: 'core_typescript_lesson',
-      kind: 'recurring',
-      cron: '0 7 * * 1-5', // 7:00 AM Mon-Fri
-      blueprint: 'blueprints/ts-lesson.md',
-      channel_id: '1494156616071643386' // #typescript-learning
-    },
-    {
-      id: 'core_typescript_recap',
-      kind: 'recurring',
-      cron: '0 7 * * 6', // 7:00 AM Saturday
-      blueprint: 'blueprints/ts-recap.md',
-      channel_id: '1494156616071643386' // #typescript-learning
-    },
+
     {
       id: 'core_evening_weather',
       kind: 'recurring',

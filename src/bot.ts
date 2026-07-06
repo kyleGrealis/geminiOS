@@ -179,7 +179,7 @@ client.on('messageCreate', async (message) => {
   // 2. Fetch recent channel history for conversation context (up to 5 messages)
   const history: any[] = [];
   try {
-    const fetched = await message.channel.messages.fetch({ limit: 31 });
+    const fetched = await message.channel.messages.fetch({ limit: 6 });
     const sorted = Array.from(fetched.values()).reverse();
     // Exclude the current message (the last one)
     const contextMessages = sorted.slice(0, -1);
