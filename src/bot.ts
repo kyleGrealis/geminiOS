@@ -91,7 +91,7 @@ client.on('messageCreate', async (message) => {
   const channelName = (message.channel as any).name || 'main';
   
   // Dedicated channels Qwerty monitors automatically without pings
-  const monitoredChannels = ['main', 'weather', 'news', 'misc', 'typescript', 'devops', 'logs', 'issues'];
+  const monitoredChannels = ['main', 'weather', 'news', 'misc', 'devops', 'logs', 'issues'];
   const isMonitoredChannel = monitoredChannels.some(ch => channelName.toLowerCase().includes(ch));
 
   if (!isMentioned && !isDM && !isMonitoredChannel) {
