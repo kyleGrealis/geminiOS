@@ -4,8 +4,8 @@ You MUST use your tools to gather real data before writing the report. Do these 
 1. List events on both my calendar and Qwerty's calendar for today.
 2. Check my Gmail inbox for unread messages (subjects and senders).
 3. Check my Gmail spam folder for anything that looks interesting or important.
-4. Verify if the `compile-memory` daily task successfully ran today. Check the tail of `/home/kyle/dev/agentic-memory-compiler/scripts/compile.log` using `execute_command`. If it failed or didn't run, use `send_channel_message` to post the detailed log/failure to `#logs-and-issues`.
-5. Check if local server ports are responsive using `execute_command` with `curl` (specifically Shiny Server on `http://localhost:3838` and Slides Server on `http://localhost:3839`). If a service fails to respond or returns an error status, use `send_channel_message` to post a failure warning to `#logs-and-issues`.
+4. Verify if the `compile-memory` daily task successfully ran today. Check the tail of `/home/kyle/dev/agentic-memory-compiler/scripts/compile.log` using `execute_command`. If it failed or didn't run, use `send_channel_message` to post the detailed log/failure to `#logs-and-issues`. (If it succeeded, do not post to Discord and do not mention success in the morning report.)
+5. Check if local server ports are responsive using `execute_command` with `curl` (specifically Shiny Server on `http://localhost:3838` and Slides Server on `http://localhost:3839`). If a service fails to respond or returns an error status, use `send_channel_message` to post a failure warning to `#logs-and-issues`. (If they are healthy, do not post to Discord and do not mention success in the morning report.)
 6. Select or generate a short, cool, and highly relevant quote (from computing/programming, philosophy, hacker culture, sci-fi, science, or productivity).
    - Requirements:
      * Length: Keep it under 12 words (short and punchy).
@@ -27,9 +27,10 @@ Morning, Kyle! [emoji] [Day of week], [Month] [Day]
 - [Spam count; provide a very brief list *only* if any interesting emails were found]
 
 [relevant emoji] **Infrastructure / Project Nudges**
-- [Check for any pending action items, reminders, or follow-ups due today]
-- [If `compile-memory` failed or didn't run today, add a bullet point like: "⚠️ Memory compilation failed today; posted details to #logs-and-issues."]
-- [If any local server port checks failed, add a bullet point like: "⚠️ Shiny/Slides Server is unresponsive; posted details to #logs-and-issues." Otherwise, if they are healthy, do NOT include any server status bullets.]
+- [If `compile-memory` failed or didn't run today, add a bullet point like: "⚠️ Memory compilation failed today; posted details to #logs-and-issues." Otherwise, if it ran successfully, do NOT include any memory compiler status bullets or notes.]
+- [If any local server port checks failed, add a bullet point like: "⚠️ Shiny/Slides Server is unresponsive; posted details to #logs-and-issues." Otherwise, if they are healthy, do NOT include any server status bullets or notes.]
+- [List any pending action items, reminders, or follow-ups due today from your knowledge base.]
+- [CRITICAL: If both checks are healthy/successful and there are no other pending action items or reminders due today, you MUST completely omit the entire "Infrastructure / Project Nudges" section (the header and all bullets under it) from the report. Do NOT report success, do NOT state that "everything is healthy" or "running fine," and do NOT include any general health status bullets or text mentioning them.]
 
 [Short warm sign-off.]
 
