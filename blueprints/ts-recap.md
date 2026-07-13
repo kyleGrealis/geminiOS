@@ -11,4 +11,4 @@ Each value must be a string. Ensure code blocks inside the "code" field are wrap
 Content Guidelines:
 1. "prose": **Weekly Recap** (one sentence overview of the topics), followed by **Key Concepts Summary** (1-2 paragraphs consolidating these concepts, focusing on structural typing for data schemas and mapping dplyr data pipelines to JS array operations). Use emojis for a warm, friendly tone.
 2. "code": A cohesive code example that combines several of these topics (e.g., modeling a dataset like mtcars or iris and running a multi-step filter/map/reduce pipeline).
-3. "followup": **Weekend Challenge** (a brief, fun prompt for Kyle to practice on archMitters in `typescript_playground` by writing types and pipelines from scratch), **Connection to geminiOS**, and the URL: https://www.typescriptlang.org/play
+3. "followup": **Weekend Challenge** (a brief, fun prompt for Kyle to practice on nixMitters in `typescript_playground` by writing types and pipelines from scratch), **Connection to geminiOS**, and the URL: https://www.typescriptlang.org/play

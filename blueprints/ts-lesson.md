@@ -15,6 +15,6 @@ Content Guidelines:
      * The exact structural type (interface/type alias) and variable definition in TypeScript representing the same data.
      * The comparison between a dplyr expression (e.g. filter, mutate, select, arrange, summarise) and the native TypeScript equivalent (e.g. .filter(), .map(), .reduce(), .sort()).
 3. "followup":
-   - **Try it**: A hands-on coding prompt directing Kyle to write structural types, schemas, or array pipeline functions from scratch on archMitters in `typescript_playground` without copy-pasting, focusing on functional data manipulation (filtering, mapping, reducing) to build muscle memory.
+   - **Try it**: A hands-on coding prompt directing Kyle to write structural types, schemas, or array pipeline functions from scratch on nixMitters in `typescript_playground` without copy-pasting, focusing on functional data manipulation (filtering, mapping, reducing) to build muscle memory.
    - **Connection to geminiOS**: A brief description of how this concept applies under the hood to geminiOS configuration or tools.
    - **Playground URL**: https://www.typescriptlang.org/play
